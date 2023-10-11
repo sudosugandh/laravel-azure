@@ -1,8 +1,3 @@
-# PHP
-# Test and package your PHP project.
-# Add steps that run tests, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/php
-
 trigger:
 - main
 
@@ -32,23 +27,25 @@ steps:
     sudo apt-get -y remove composer
     sudo wget https://getcomposer.org/composer.phar -O /usr/local/bin/composer
     sudo chmod +x /usr/local/bin/composer
-    export PATH=$PATH:~/usr/local/bin/
+    export PATH=$PATH:/usr/local/bin/
     sudo composer self-update
     composer --version
     composer install --no-interaction --prefer-dist --no-suggest
   displayName: 'Installing Package Dependencies'
 
 - script: |
-    touch database/database.sqlite
-    cp .env.example .env && php artisan key:generate
+    cp .env.example .env
+    php artisan key:generate
+    php artisan migrate --seed
   displayName: 'Setting Up Application Environment'
 
 - script: |
-    screen -d -m google-chrome-stable --headless --disable-gpu --disable-dev-shm-usage --disable-software-rasterizer --remote-debugging-port=9222 http://localhost &
-    screen -d -m php artisan serve &
+    google-chrome-stable &
+    php artisan serve &
   displayName: 'Starting Chrome and the Web Server'
 
-- script: vendor/bin/phpunit --testdox --verbose
+- script: |
+    vendor/bin/phpunit --testdox
   displayName: 'Running Unit Test'
 
 - script: |
